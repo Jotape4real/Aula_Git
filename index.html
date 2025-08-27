@@ -1,13 +1,710 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guizinho e Liminha</title>
+    <title>VectorVest - Dados Reais</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --background: #111827;
+            --surface: #1F2937;
+            --surface-light: #374151;
+            --primary: #24D108;
+            --primary-hover: #4AEF2D;
+            --text-main: #F9FAFB;
+            --text-secondary: #9CA3AF;
+            --positive: #10B981;
+            --negative: #EF4444;
+            --border-color: #4B5563;
+        }
+        [data-theme="light"] {
+            --background: #F9FAFB;
+            --surface: #FFFFFF;
+            --surface-light: #F3F4F6;
+            --primary: #24D108;
+            --primary-hover: #4AEF2D;
+            --text-main: #1F2937;
+            --text-secondary: #4B5563;
+            --border-color: #D1D5DB;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body { font-family: 'Space Grotesk', sans-serif; background-color: var(--background); color: var(--text-main); margin: 0; font-size: 16px; transition: background-color 0.3s ease, color 0.3s ease; }
+        body.modal-open { overflow: hidden; }
+
+        .container { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+        .card { background-color: var(--surface); border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border-color); }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; }
+        h2 { border-bottom: 2px solid var(--primary); padding-bottom: 0.5rem; margin-bottom: 1.5rem; }
+        .hidden { display: none !important; }
+
+        /* === INÍCIO: ESTILOS DA TELA DE LOGIN/REGISTRO === */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--background);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            transition: opacity 0.3s ease;
+        }
+        .login-box {
+            background-color: var(--surface);
+            padding: 2.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .login-box h2 {
+            margin-top: 0;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+            border-bottom: none;
+        }
+        .login-box .brand-span { color: var(--primary); }
+        .input-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        .input-group input {
+            width: 100%;
+            background-color: var(--background);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(36, 209, 8, 0.3);
+        }
+        .login-btn {
+            width: 100%;
+            background-color: var(--primary);
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1rem;
+            color: #000;
+            transition: background-color 0.2s;
+        }
+        .login-btn:hover { background-color: var(--primary-hover); }
+        .error-message {
+            color: var(--negative);
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            min-height: 1.2rem; /* Keep space to prevent layout shift */
+            transition: color 0.3s ease;
+        }
+        .login-footer { margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-secondary); }
+        .login-footer a { color: var(--primary); text-decoration: none; font-weight: 500; cursor: pointer; }
+        .login-footer a:hover { text-decoration: underline; }
+        /* === FIM: ESTILOS DA TELA DE LOGIN/REGISTRO === */
+
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+        header h1 { margin: 0; font-size: 2.2rem; font-weight: 700; display: flex; align-items: center; }
+        header h1 .brand-span { color: var(--primary); }
+        .tier-badge { font-size: 0.5em; font-weight: 500; padding: 0.2em 0.6em; border-radius: 6px; vertical-align: middle; margin-left: 0.75rem; text-transform: uppercase; }
+        .free-badge { background-color: var(--surface-light); color: var(--text-secondary); }
+        .premium-badge { background: linear-gradient(45deg, var(--primary), var(--positive)); color: #000; }
+        
+        .header-right { display: flex; align-items: center; gap: 0.75rem; }
+        .header-action-btn { background: var(--surface); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 50%; width: 40px; height: 40px; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .header-action-btn:hover { background: var(--surface-light); }
+        
+        #premium-header-btn {
+            width: auto;
+            border-radius: 99px;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+        #premium-header-btn:hover {
+            background-color: var(--primary);
+            color: var(--background);
+        }
+
+        nav { width: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; background-color: var(--surface); padding: 0.5rem; border-radius: 99px; margin-top: 1.5rem; border: 1px solid var(--border-color); }
+        .nav-btn { background: none; border: none; color: var(--text-secondary); padding: 0.75rem 1.5rem; font-size: 1rem; font-weight: 500; cursor: pointer; border-radius: 99px; transition: all 0.2s ease-in-out; }
+        .nav-btn:hover { background-color: var(--surface-light); color: var(--text-main); }
+        .nav-btn.active { background-color: var(--primary); color: #000; font-weight: 700; }
+        
+        .content-section { display: none; }
+        .content-section.active { display: block; animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .search-container { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+        #asset-search { flex-grow: 1; background-color: var(--background); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.75rem; border-radius: 6px; font-size: 1rem; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color); }
+        thead { background-color: var(--surface-light); }
+        .asset-name { display: flex; align-items: center; gap: 1rem; }
+        
+        .asset-logo {
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+            min-height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .positive { color: var(--positive); }
+        .negative { color: var(--negative); }
+        
+        .action-btn { border: none; padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; font-weight: 700; transition: opacity 0.2s; color: #000; }
+        .action-btn:hover { opacity: 0.85; }
+        .buy-btn { background-color: var(--positive); }
+        
+        .add-item-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; align-items: flex-end; margin-bottom: 2rem; }
+        .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
+        .form-group label { font-size: 0.9rem; color: var(--text-secondary); }
+        .form-group input, .form-group select { background-color: var(--background); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.75rem; border-radius: 6px; font-size: 1rem; width: 100%; }
+        .form-total-cost { grid-column: 1 / -1; text-align: right; font-weight: 500; color: var(--text-secondary); }
+        .form-total-cost span { color: var(--primary); font-size: 1.2rem; }
+        
+        .chart-container { margin: 2rem 0; height: 300px; }
+
+        .premium-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(17, 24, 39, 0.95); z-index: 900; display: flex; align-items: center; justify-content: center; overflow-y: auto; padding: 2rem; animation: fadeIn 0.3s; }
+        .premium-content-wrapper { max-width: 800px; width: 100%; position: relative; }
+        .premium-close-btn { position: absolute; top: -1rem; right: -1rem; background: var(--surface); color: var(--text-main); border-radius: 50%; width: 40px; height: 40px; font-size: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--border-color); }
+        .premium-page-header { text-align: center; margin-bottom: 2.5rem; }
+        .premium-page-header h2 { font-size: 2rem; }
+        .premium-page-header p { font-size: 1.1rem; color: var(--text-secondary); }
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }
+        .feature-card { background-color: var(--surface); padding: 1.5rem; border-radius: 8px; text-align: center; }
+        .feature-card h4 { margin-top: 0; font-size: 1.2rem; }
+        .cta-box { text-align: center; background-color: var(--surface); padding: 2rem; border-radius: 8px; }
+        .upgrade-btn { background: linear-gradient(45deg, var(--primary), var(--positive)); font-size: 1.2rem; border: none; padding: 1rem 2rem; }
+
+        .modal-overlay { position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; animation: fadeIn 0.3s; }
+        .modal-content { background-color: var(--surface); padding: 2rem; border-radius: 12px; border: 1px solid var(--border-color); width: 90%; max-width: 500px; position: relative; }
+        .modal-close { position: absolute; top: 10px; right: 20px; color: var(--text-secondary); font-size: 28px; font-weight: bold; cursor: pointer; }
+        .modal-close:hover { color: var(--text-main); }
+        .benefits-table ul { list-style: none; padding: 0; margin: 1.5rem 0; }
+        .benefits-table li { margin-bottom: 0.75rem; font-weight: 500; }
+        .purchase-summary { display: flex; justify-content: space-between; align-items: center; font-size: 1.2rem; font-weight: bold; margin: 1.5rem 0; padding-top: 1rem; border-top: 1px solid var(--border-color); }
+        .purchase-summary .price { color: var(--primary); }
+        
+        footer { text-align: center; padding: 2rem; color: var(--text-secondary); font-size: 0.9rem; }
+    </style>
 </head>
 <body>
-     <h1><i>fatal model</i></h1>
-     
-     
-     
+
+    <div id="login-container" class="login-overlay">
+        <div class="login-box">
+            <h2>Vector<span class="brand-span">Vest</span></h2>
+
+            <form id="login-form">
+                <div class="input-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" required value="user@vector.com">
+                </div>
+                <div class="input-group">
+                    <label for="login-password">Senha</label>
+                    <input type="password" id="login-password" required value="password123">
+                </div>
+                <p id="login-error" class="error-message"></p>
+                <button type="submit" class="login-btn">Entrar</button>
+                <p class="login-footer">Não tem uma conta? <a id="show-register-link">Crie uma agora</a></p>
+            </form>
+            
+            <form id="register-form" class="hidden">
+                <div class="input-group">
+                    <label for="register-name">Nome Completo</label>
+                    <input type="text" id="register-name" required>
+                </div>
+                <div class="input-group">
+                    <label for="register-email">Email</label>
+                    <input type="email" id="register-email" required>
+                </div>
+                <div class="input-group">
+                    <label for="register-password">Senha (mín. 8 caracteres)</label>
+                    <input type="password" id="register-password" required minlength="8">
+                </div>
+                <div class="input-group">
+                    <label for="register-confirm-password">Confirmar Senha</label>
+                    <input type="password" id="register-confirm-password" required minlength="8">
+                </div>
+                <p id="register-error" class="error-message"></p>
+                <button type="submit" class="login-btn">Criar Conta</button>
+                <p class="login-footer">Já tem uma conta? <a id="show-login-link">Entre agora</a></p>
+            </form>
+
+        </div>
+    </div>
+    <div id="main-container" class="container hidden">
+        <header>
+            <h1 id="app-title"></h1>
+            <div class="header-right">
+                <button id="premium-header-btn" title="Seja Premium" class="header-action-btn hidden">💎 Premium</button>
+                <button id="theme-toggle" title="Alterar Tema" class="header-action-btn">☀️</button>
+                <button id="logout-btn" title="Sair" class="header-action-btn">🚪</button>
+            </div>
+        </header>
+
+        <nav id="main-nav" role="navigation">
+            <button id="nav-monitor" class="nav-btn active">Mercado</button>
+            <button id="nav-portfolio" class="nav-btn">Carteira</button>
+            <button id="nav-performance" class="nav-btn">Rendimentos</button>
+        </nav>
+
+        <main>
+            <div id="main-wallet" class="card grid-3" style="margin-top: 2rem;">
+                <div class="wallet-card"><p>Saldo em Caixa</p><div class="value" id="wallet-cash">R$ 0,00</div></div>
+                <div class="wallet-card"><p>Total Investido</p><div class="value" id="wallet-invested">R$ 0,00</div></div>
+                <div class="wallet-card"><p>Patrimônio Total</p><div class="value" id="wallet-total">R$ 0,00</div></div>
+            </div>
+            <section id="monitor-section" class="content-section active card" style="margin-top: 2rem;">
+                <div class="search-container">
+                    <input type="search" id="asset-search" placeholder="Procurar por nome ou símbolo...">
+                </div>
+                <h2>Criptomoedas</h2>
+                <div id="crypto-table-container">Carregando...</div>
+                <h2>Ações (Dados Simulados)</h2>
+                <div id="stocks-table-container">Carregando...</div>
+            </section>
+            <section id="portfolio-section" class="content-section card" style="margin-top: 2rem;">
+                <div class="chart-container"><canvas id="portfolio-pie"></canvas></div>
+                <div>
+                    <h2>Adicionar Cripto à Carteira</h2>
+                    <form id="crypto-investment-form" class="add-item-form">
+                        <div class="form-group"><label for="crypto-select">Moeda</label><select id="crypto-select" required></select></div>
+                        <div class="form-group"><label for="crypto-quantity">Quantidade</label><input type="number" id="crypto-quantity" step="any" min="0.00001" required></div>
+                        <div class="form-group"><label for="crypto-price">Preço de Compra (USD)</label><input type="number" id="crypto-price" step="any" min="0.01" required></div>
+                        <button type="submit" class="action-btn buy-btn">Adicionar</button>
+                        <div class="form-total-cost">Custo: <span id="crypto-cost-brl">R$ 0,00</span></div>
+                    </form>
+                </div>
+                <div>
+                    <h2>Meu Portfólio Cripto</h2>
+                    <table id="crypto-portfolio-table">
+                        <thead><tr><th>Ativo</th><th>Posição</th><th>Valor Atual</th><th>L/P</th><th>L/P %</th></tr></thead>
+                        <tbody id="crypto-portfolio-body"></tbody>
+                    </table>
+                </div>
+                 <div>
+                    <h2>Histórico de Transações</h2>
+                    <table id="transactions-table">
+                        <thead><tr><th>Data</th><th>Tipo</th><th>Ativo</th><th>Qtd.</th><th>Preço (BRL)</th></tr></thead>
+                        <tbody id="transactions-body"></tbody>
+                    </table>
+                </div>
+            </section>
+            <section id="performance-section" class="content-section card" style="margin-top: 2rem;">
+                <div id="performance-content">
+                    <h2>Rendimento Total da Carteira</h2>
+                    <div id="performance-summary"></div>
+                </div>
+            </section>
+        </main>
+        <footer><p>VectorVest | Dados de cripto fornecidos pela CoinGecko.</p></footer>
+    </div>
+    
+    <div id="premium-section" class="premium-overlay hidden">
+        <div class="premium-content-wrapper">
+            <span id="premium-close-btn" class="premium-close-btn">&times;</span>
+            <div class="premium-page-header">
+                <h2>Leve seus Investimentos para o Próximo Nível 🚀</h2>
+                <p>Com o VectorVest Premium, você tem acesso a insights e ferramentas exclusivas para maximizar seus retornos.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card"><h4>📊 Análises Avançadas</h4><p>Métricas em tempo real e relatórios detalhados de performance.</p></div>
+                <div class="feature-card"><h4>⚙️ Ferramentas Exclusivas</h4><p>Otimize e simule cenários com nossa calculadora de portfólio.</p></div>
+                <div class="feature-card"><h4>🔔 Alertas de Mercado</h4><p>Seja notificado sobre movimentos importantes e oportunidades.</p></div>
+            </div>
+            <div class="cta-box">
+                <h3>Pronto para Começar?</h3>
+                <button id="upgrade-to-premium-btn" class="action-btn upgrade-btn">Fazer Upgrade por R$ 49,90</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="confirmation-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <span id="modal-close-btn" class="modal-close">&times;</span>
+            <h2>Confirme sua Assinatura Premium</h2>
+            <p>Você está a um passo de se tornar um membro VectorVest Premium.</p>
+            <div class="benefits-table">
+                <h3>Benefícios Incluídos:</h3>
+                <ul>
+                    <li>✅ Análises de Mercado em Tempo Real</li>
+                    <li>✅ Relatórios Detalhados de Rendimento</li>
+                    <li>✅ Ferramentas Avançadas de Portfólio</li>
+                    <li>✅ Suporte Prioritário</li>
+                    <li>✅ Experiência Livre de Anúncios</li>
+                </ul>
+            </div>
+            <div class="purchase-summary">
+                <span>Total:</span><span class="price">R$ 49,90</span>
+            </div>
+            <button id="confirm-purchase-btn" class="action-btn upgrade-btn">Confirmar Compra</button>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        (() => {
+            // === INÍCIO: JAVASCRIPT DE AUTENTICAÇÃO ===
+
+            // NOVO: Referências para os formulários de login e registro
+            const uiAuth = {
+                loginContainer: document.getElementById('login-container'),
+                mainContainer: document.getElementById('main-container'),
+                loginForm: document.getElementById('login-form'),
+                registerForm: document.getElementById('register-form'),
+                loginEmailInput: document.getElementById('login-email'),
+                loginPasswordInput: document.getElementById('login-password'),
+                loginError: document.getElementById('login-error'),
+                registerError: document.getElementById('register-error'),
+                showRegisterLink: document.getElementById('show-register-link'),
+                showLoginLink: document.getElementById('show-login-link'),
+            };
+
+            function showLoginForm(e) {
+                if(e) e.preventDefault();
+                uiAuth.registerForm.classList.add('hidden');
+                uiAuth.loginForm.classList.remove('hidden');
+                uiAuth.registerError.textContent = '';
+                uiAuth.registerError.style.color = 'var(--negative)';
+            }
+            
+            function showRegisterForm(e) {
+                e.preventDefault();
+                uiAuth.loginForm.classList.add('hidden');
+                uiAuth.registerForm.classList.remove('hidden');
+                uiAuth.loginError.textContent = '';
+            }
+
+            function handleLogin(event) {
+                event.preventDefault();
+                uiAuth.loginError.textContent = '';
+                const email = uiAuth.loginEmailInput.value;
+                const password = uiAuth.loginPasswordInput.value;
+
+                if (email === 'user@vector.com' && password === 'password123') {
+                    sessionStorage.setItem('isLoggedIn', 'true');
+                    uiAuth.loginContainer.style.opacity = '0';
+                    setTimeout(() => {
+                        uiAuth.loginContainer.classList.add('hidden');
+                        uiAuth.mainContainer.classList.remove('hidden');
+                        initializeApp();
+                    }, 300);
+                } else {
+                    uiAuth.loginError.textContent = 'Credenciais inválidas. Tente novamente.';
+                }
+            }
+            
+            // NOVO: Função para simular o registro
+            function handleRegister(event) {
+                event.preventDefault();
+                uiAuth.registerError.textContent = '';
+                uiAuth.registerError.style.color = 'var(--negative)';
+                
+                const name = document.getElementById('register-name').value;
+                const email = document.getElementById('register-email').value;
+                const password = document.getElementById('register-password').value;
+                const confirmPassword = document.getElementById('register-confirm-password').value;
+
+                if (password !== confirmPassword) {
+                    uiAuth.registerError.textContent = 'As senhas não coincidem.';
+                    return;
+                }
+                if (password.length < 8) {
+                    uiAuth.registerError.textContent = 'A senha deve ter pelo menos 8 caracteres.';
+                    return;
+                }
+                
+                // Simulação de sucesso
+                uiAuth.registerError.style.color = 'var(--positive)';
+                uiAuth.registerError.textContent = 'Conta criada com sucesso! Redirecionando...';
+
+                setTimeout(() => {
+                    showLoginForm(); // Volta para a tela de login
+                    uiAuth.loginEmailInput.value = email; // Preenche o email
+                    uiAuth.loginPasswordInput.value = ''; // Limpa a senha
+                    uiAuth.loginPasswordInput.focus(); // Foca no campo de senha
+                }, 2000);
+            }
+
+            function handleLogout() {
+                sessionStorage.removeItem('isLoggedIn');
+                window.location.reload();
+            }
+
+            // NOVO: Adiciona os listeners para os formulários
+            function setupAuthListeners() {
+                uiAuth.loginForm.addEventListener('submit', handleLogin);
+                uiAuth.registerForm.addEventListener('submit', handleRegister);
+                uiAuth.showRegisterLink.addEventListener('click', showRegisterForm);
+                uiAuth.showLoginLink.addEventListener('click', showLoginForm);
+            }
+
+            // Ponto de entrada da aplicação
+            function checkAuth() {
+                const savedTheme = JSON.parse(localStorage.getItem('vectorvest_data_v5'))?.theme || 'dark';
+                document.body.dataset.theme = savedTheme;
+
+                if (sessionStorage.getItem('isLoggedIn') === 'true') {
+                    uiAuth.loginContainer.classList.add('hidden');
+                    uiAuth.mainContainer.classList.remove('hidden');
+                    initializeApp();
+                } else {
+                    uiAuth.loginContainer.classList.remove('hidden');
+                    uiAuth.mainContainer.classList.add('hidden');
+                    setupAuthListeners(); // Configura os eventos de autenticação
+                }
+            }
+            
+            // A aplicação principal agora está totalmente encapsulada
+            async function initializeApp() {
+            // === FIM: JAVASCRIPT DE AUTENTICAÇÃO ===
+
+            const initialCash = 1000000;
+            const persistKey = 'vectorvest_data_v5';
+            const mockStocks = {
+                'AAPL': { price: 210, percentChange: 0.5, image: 'https://logo.clearbit.com/apple.com', name: 'Apple Inc.' },
+                'GOOG': { price: 180, percentChange: -2.2, image: 'https://logo.clearbit.com/google.com', name: 'Alphabet Inc.' },
+            };
+            const state = {
+                userTier: 'free', cryptoPortfolio: [], transactions: [], wallet: { cashBRL: initialCash },
+                cryptoData: {}, stocksData: {}, usdToBrlRate: 5.45, theme: 'dark',
+            };
+            const ui = {
+                appTitle: document.getElementById('app-title'),
+                themeToggle: document.getElementById('theme-toggle'),
+                logoutBtn: document.getElementById('logout-btn'),
+                premiumHeaderBtn: document.getElementById('premium-header-btn'),
+                premiumSection: document.getElementById('premium-section'),
+                premiumCloseBtn: document.getElementById('premium-close-btn'),
+                mainNav: document.getElementById('main-nav'),
+                assetSearch: document.getElementById('asset-search'),
+                cryptoContainer: document.getElementById('crypto-table-container'),
+                stocksContainer: document.getElementById('stocks-table-container'),
+                upgradeBtn: document.getElementById('upgrade-to-premium-btn'),
+                confirmationModal: document.getElementById('confirmation-modal'),
+                modalCloseBtn: document.getElementById('modal-close-btn'),
+                confirmPurchaseBtn: document.getElementById('confirm-purchase-btn'),
+                sections: { all: document.querySelectorAll('.content-section') },
+                portfolioPie: document.getElementById('portfolio-pie'),
+                performanceSummary: document.getElementById('performance-summary'),
+                wallet: { cash: document.getElementById('wallet-cash'), invested: document.getElementById('wallet-invested'), total: document.getElementById('wallet-total') },
+                cryptoInvestmentForm: document.getElementById('crypto-investment-form'),
+                cryptoPortfolioBody: document.getElementById('crypto-portfolio-body'),
+                transactionsBody: document.getElementById('transactions-body'),
+                cryptoSelect: document.getElementById('crypto-select'),
+            };
+            let pieChartInstance = null;
+            
+            async function initAppCore() {
+                loadState();
+                ui.cryptoContainer.innerHTML = '<p style="text-align:center; padding:1rem;">Buscando dados reais...</p>';
+                state.cryptoData = await fetchRealCryptoData();
+                state.stocksData = mockStocks;
+                document.body.dataset.theme = state.theme;
+                ui.themeToggle.textContent = state.theme === 'dark' ? '☀️' : '🌙';
+                updateHeader();
+                setupEventListeners();
+                populateCryptoSelect();
+                renderAll();
+            }
+            
+            async function fetchRealCryptoData() {
+                const ids = 'bitcoin,ethereum,solana,cardano,ripple,dogecoin,avalanche-2,chainlink,polygon';
+                const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}`;
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error('Falha na API');
+                    const data = await response.json();
+                    const formattedData = {};
+                    data.forEach(coin => { formattedData[coin.id] = coin; });
+                    return formattedData;
+                } catch (error) {
+                    console.error("Falha ao buscar dados da API.", error);
+                    return { 'bitcoin': { id: 'bitcoin', name: 'Bitcoin (API Falhou)', symbol: 'BTC', image: '', current_price: 0, price_change_percentage_24h: 0 } };
+                }
+            }
+            function renderAll(filter = '') {
+                renderCryptoTable(filter);
+                renderStocksTable(filter);
+                renderCryptoPortfolio();
+                renderTransactions();
+                updateWalletUI();
+                if (document.getElementById('portfolio-section').classList.contains('active')) {
+                   renderPortfolioPieChart();
+                }
+            }
+            function loadState() { const savedState = JSON.parse(localStorage.getItem(persistKey)); if (savedState) { Object.assign(state, savedState); } }
+            function saveState() { localStorage.setItem(persistKey, JSON.stringify(state)); }
+            const formatBRL = (v) => !isNaN(v) ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'R$ 0,00';
+            const formatUSD = (v) => !isNaN(v) ? v.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '$0.00';
+            const formatDate = (d) => new Date(d).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const formatPercent = (v) => { if (isNaN(v) || !isFinite(v)) return 'N/A'; const s = v >= 0 ? '+' : ''; return `<span class="${v >= 0 ? 'positive' : 'negative'}">${s}${v.toFixed(2)}%</span>`; };
+            function updateHeader() {
+                if (state.userTier === 'premium') {
+                    ui.appTitle.innerHTML = `Vector<span class="brand-span">Vest</span> <span class="tier-badge premium-badge">Premium 💎</span>`;
+                    ui.premiumHeaderBtn.classList.add('hidden');
+                } else {
+                    ui.appTitle.innerHTML = `Vector<span class="brand-span">Vest</span> <span class="tier-badge free-badge">Free</span>`;
+                    ui.premiumHeaderBtn.classList.remove('hidden');
+                }
+            }
+            function populateCryptoSelect() {
+                ui.cryptoSelect.innerHTML = Object.values(state.cryptoData).sort((a,b) => a.name.localeCompare(b.name)).map(c => `<option value="${c.id}" data-price="${c.current_price}">${c.name} (${c.symbol.toUpperCase()})</option>`).join('');
+                ui.cryptoSelect.dispatchEvent(new Event('change'));
+            }
+            function buyCrypto(assetId, quantity, priceUSD) {
+                const costUSD = quantity * priceUSD;
+                const costBRL = costUSD * state.usdToBrlRate;
+                if (state.wallet.cashBRL < costBRL) { alert('Saldo em caixa insuficiente!'); return false; }
+                state.wallet.cashBRL -= costBRL;
+                let existingAsset = state.cryptoPortfolio.find(a => a.id === assetId);
+                if (existingAsset) {
+                    const totalValue = (existingAsset.avgBuyPrice * existingAsset.quantity) + costUSD;
+                    existingAsset.quantity += quantity;
+                    existingAsset.avgBuyPrice = totalValue / existingAsset.quantity;
+                } else {
+                    state.cryptoPortfolio.push({ id: assetId, quantity: quantity, avgBuyPrice: priceUSD });
+                }
+                const cryptoInfo = state.cryptoData[assetId];
+                state.transactions.push({ date: new Date().toISOString(), type: 'Compra', assetName: cryptoInfo.name, assetSymbol: cryptoInfo.symbol.toUpperCase(), quantity, priceBRL: costBRL });
+                saveState();
+                renderAll();
+                return true;
+            }
+            function renderCryptoTable(filter = '') {
+                const data = Object.values(state.cryptoData).filter(c => c.name.toLowerCase().includes(filter) || c.symbol.toLowerCase().includes(filter));
+                if (data.length === 0) { ui.cryptoContainer.innerHTML = '<p style="text-align:center; padding:1rem;">Nenhuma criptomoeda encontrada.</p>'; return; }
+                ui.cryptoContainer.innerHTML = `<table><thead><tr><th>Ativo</th><th>Preço</th><th>Variação 24h</th><th>Ações</th></tr></thead><tbody>${data.map(c => `<tr><td><div class="asset-name"><img src="${c.image}" alt="${c.name}" class="asset-logo"><div>${c.name} <span style="color:var(--text-secondary)">${c.symbol.toUpperCase()}</span></div></div></td><td>${formatUSD(c.current_price)}</td><td>${formatPercent(c.price_change_percentage_24h)}</td><td><button class="action-btn buy-btn" data-asset-id="${c.id}">Comprar</button></td></tr>`).join('')}</tbody></table>`;
+            }
+            function renderStocksTable(filter = '') {
+                 const data = Object.entries(state.stocksData).filter(([t, s]) => s.name.toLowerCase().includes(filter) || t.toLowerCase().includes(filter));
+                 if (data.length === 0) { ui.stocksContainer.innerHTML = '<p style="text-align:center; padding:1rem;">Nenhuma ação encontrada.</p>'; return; }
+                 ui.stocksContainer.innerHTML = `<table><thead><tr><th>Ativo</th><th>Preço</th><th>Variação</th><th>Ações</th></tr></thead><tbody>${data.map(([t, s]) => `<tr><td><div class="asset-name"><img src="${s.image}" alt="${s.name}" class="asset-logo"><div>${s.name} <span style="color:var(--text-secondary)">${t}</span></div></div></td><td>${formatUSD(s.price)}</td><td>${formatPercent(s.percentChange)}</td><td><button class="action-btn buy-btn" disabled title="Em breve">Comprar</button></td></tr>`).join('')}</tbody></table>`;
+            }
+            function renderCryptoPortfolio() {
+                if (state.cryptoPortfolio.length === 0) { ui.cryptoPortfolioBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Sua carteira de cripto está vazia.</td></tr>'; return; }
+                ui.cryptoPortfolioBody.innerHTML = state.cryptoPortfolio.map(asset => {
+                    const currentData = state.cryptoData[asset.id];
+                    if (!currentData) return '';
+                    const totalInvestedUSD = asset.quantity * asset.avgBuyPrice;
+                    const currentValueUSD = asset.quantity * currentData.current_price;
+                    const profitLossUSD = currentValueUSD - totalInvestedUSD;
+                    const profitLossPercent = totalInvestedUSD > 0 ? (profitLossUSD / totalInvestedUSD) * 100 : 0;
+                    return `<tr><td><div class="asset-name"><img src="${currentData.image}" alt="${currentData.name}" class="asset-logo"><div>${currentData.name}</div></div></td><td>${asset.quantity.toFixed(6)} ${currentData.symbol.toUpperCase()}<br><span style="font-size:0.8em; color:var(--text-secondary)">Preço Médio: ${formatUSD(asset.avgBuyPrice)}</span></td><td>${formatUSD(currentValueUSD)}</td><td><span class="${profitLossUSD >= 0 ? 'positive' : 'negative'}">${formatUSD(profitLossUSD)}</span></td><td>${formatPercent(profitLossPercent)}</td></tr>`;
+                }).join('');
+            }
+            function renderTransactions() {
+                if (state.transactions.length === 0) { ui.transactionsBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Nenhuma transação registrada.</td></tr>'; return; }
+                ui.transactionsBody.innerHTML = [...state.transactions].reverse().map(tx => `<tr><td>${formatDate(tx.date)}</td><td>${tx.type}</td><td>${tx.assetName} (${tx.assetSymbol})</td><td>${tx.quantity.toFixed(6)}</td><td>${formatBRL(tx.priceBRL)}</td></tr>`).join('');
+            }
+            function updateWalletUI() {
+                let totalCurrentValueBRL = 0;
+                state.cryptoPortfolio.forEach(asset => { const data = state.cryptoData[asset.id]; if (data) { totalCurrentValueBRL += (asset.quantity * data.current_price * state.usdToBrlRate); }});
+                const totalInvestedBRL = state.transactions.filter(tx => tx.type === 'Compra').reduce((sum, tx) => sum + tx.priceBRL, 0);
+                const totalPatrimony = state.wallet.cashBRL + totalCurrentValueBRL;
+                ui.wallet.cash.textContent = formatBRL(state.wallet.cashBRL);
+                ui.wallet.invested.textContent = formatBRL(totalCurrentValueBRL);
+                ui.wallet.total.textContent = formatBRL(totalPatrimony);
+                const totalProfitLoss = totalCurrentValueBRL - totalInvestedBRL;
+                const totalProfitLossPercent = totalInvestedBRL > 0 ? (totalProfitLoss / totalInvestedBRL) * 100 : 0;
+                if (totalInvestedBRL > 0) { ui.performanceSummary.innerHTML = `<div class="grid-3"><div class="card"><p>Lucro/Prejuízo Total</p><div class="value ${totalProfitLoss >= 0 ? 'positive' : 'negative'}">${formatBRL(totalProfitLoss)}</div></div><div class="card"><p>Retorno Total (%)</p><div class="value ${totalProfitLossPercent >= 0 ? 'positive' : 'negative'}">${totalProfitLossPercent.toFixed(2)}%</div></div></div>`; }
+                else { ui.performanceSummary.innerHTML = '<p style="text-align:center; padding:1rem;">Adicione ativos à sua carteira para ver seu rendimento.</p>'; }
+            }
+            function renderPortfolioPieChart() {
+                const ctx = ui.portfolioPie.getContext('2d');
+                if (pieChartInstance) pieChartInstance.destroy();
+                if (state.cryptoPortfolio.length === 0) return;
+                pieChartInstance = new Chart(ctx, { type: 'doughnut', data: { labels: state.cryptoPortfolio.map(a => state.cryptoData[a.id]?.name), datasets: [{ data: state.cryptoPortfolio.map(a => a.quantity * state.cryptoData[a.id]?.current_price), backgroundColor: ['#24D108', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#F97316', '#3B82F6'], borderColor: 'var(--surface)', borderWidth: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: 'var(--text-secondary)' } } } } });
+            }
+            function setupEventListeners() {
+                document.querySelectorAll('#main-nav .nav-btn').forEach(btn => btn.addEventListener('click', handleNavClick));
+                ui.assetSearch.addEventListener('input', e => renderAll(e.target.value.toLowerCase()));
+                ui.premiumHeaderBtn.addEventListener('click', () => { ui.premiumSection.classList.remove('hidden'); document.body.classList.add('modal-open'); });
+                ui.premiumCloseBtn.addEventListener('click', () => { ui.premiumSection.classList.add('hidden'); document.body.classList.remove('modal-open'); });
+                ui.upgradeBtn.addEventListener('click', () => ui.confirmationModal.classList.remove('hidden'));
+                ui.modalCloseBtn.addEventListener('click', () => ui.confirmationModal.classList.add('hidden'));
+                ui.confirmationModal.addEventListener('click', (e) => { if (e.target === ui.confirmationModal) { ui.confirmationModal.classList.add('hidden'); } });
+                ui.confirmPurchaseBtn.addEventListener('click', () => {
+                    state.userTier = 'premium'; saveState(); updateHeader();
+                    ui.confirmationModal.classList.add('hidden'); ui.premiumSection.classList.add('hidden');
+                    document.body.classList.remove('modal-open');
+                });
+                ui.themeToggle.addEventListener('click', () => {
+                    state.theme = state.theme === 'dark' ? 'light' : 'dark';
+                    document.body.dataset.theme = state.theme;
+                    ui.themeToggle.textContent = state.theme === 'dark' ? '☀️' : '🌙';
+                    saveState(); renderPortfolioPieChart();
+                });
+                ui.logoutBtn.addEventListener('click', handleLogout);
+                document.body.addEventListener('click', e => {
+                    if (e.target.matches('.buy-btn[data-asset-id]')) {
+                        const assetId = e.target.dataset.assetId, asset = state.cryptoData[assetId];
+                        const quantity = parseFloat(prompt(`Quantidade de ${asset.name} para comprar (Preço atual: ${formatUSD(asset.current_price)}):`));
+                        if (!isNaN(quantity) && quantity > 0) { buyCrypto(assetId, quantity, asset.current_price); }
+                    }
+                });
+                ui.cryptoInvestmentForm.addEventListener('submit', e => {
+                    e.preventDefault();
+                    const assetId = ui.cryptoSelect.value;
+                    const quantity = parseFloat(document.getElementById('crypto-quantity').value);
+                    const price = parseFloat(document.getElementById('crypto-price').value);
+                    if (buyCrypto(assetId, quantity, price)) { e.target.reset(); }
+                });
+                ui.cryptoInvestmentForm.addEventListener('input', () => {
+                    const quantity = parseFloat(document.getElementById('crypto-quantity').value) || 0;
+                    const price = parseFloat(document.getElementById('crypto-price').value) || 0;
+                    document.getElementById('crypto-cost-brl').textContent = formatBRL(quantity * price * state.usdToBrlRate);
+                });
+                 ui.cryptoSelect.addEventListener('change', e => {
+                    const price = e.target.options[e.target.selectedIndex].dataset.price;
+                    document.getElementById('crypto-price').value = parseFloat(price).toFixed(2);
+                });
+            }
+            
+            function handleNavClick(event) {
+                document.querySelectorAll('#main-nav .nav-btn').forEach(btn => btn.classList.remove('active'));
+                event.target.classList.add('active');
+                ui.sections.all.forEach(s => s.classList.remove('active'));
+                const targetSection = document.getElementById(event.target.id.replace('nav-', '') + '-section');
+                if (targetSection) { 
+                    targetSection.classList.add('active');
+                    if (targetSection.id === 'portfolio-section') renderPortfolioPieChart();
+                }
+            }
+
+            initAppCore();
+        }
+        
+        checkAuth(); // Verifica a autenticação ao carregar a página
+
+        })();
+    </script>
+</body>
 </html>
